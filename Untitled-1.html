@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח זמנים משופר</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 150px repeat(12, 1fr);
+            gap: 1px;
+            background: #dee2e6;
+            margin: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-cell {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .name-cell {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-cell {
+            background: white;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-cell:hover {
+            background: #f8f9fa;
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .time-cell.occupied {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            font-weight: bold;
+        }
+
+        .time-cell.selected {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border: 2px solid #4facfe;
+        }
+
+        .event-form {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 400px;
+            display: none;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4facfe;
+            display: block;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                font-size: 0.8rem;
+                margin: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .event-form {
+                min-width: 90%;
+                padding: 20px;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+        }
+
+        .export-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover,
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 לוח זמנים אינטראקטיבי</h1>
+            <p>נהל את הזמן שלך בצורה יעילה ומקצועית</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="addEvent()">➕ הוסף אירוע</button>
+            <button class="btn btn-secondary" onclick="clearAll()">🗑️ נקה הכל</button>
+            <button class="btn btn-secondary" onclick="exportData()">💾 ייצא נתונים</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📁 ייבא נתונים</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalEvents">0</span>
+                <span class="stat-label">סה"כ אירועים</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="todayEvents">0</span>
+                <span class="stat-label">אירועים היום</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="weekEvents">0</span>
+                <span class="stat-label">אירועים השבוע</span>
+            </div>
+        </div>
+
+        <div class="calendar-grid" id="calendar">
+            <!-- Calendar will be generated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeEventForm()"></div>
+    <div class="event-form" id="eventForm">
+        <h3>הוסף/ערוך אירוע</h3>
+        <form id="eventFormData">
+            <div class="form-group">
+                <label>כותרת האירוע:</label>
+                <input type="text" id="eventTitle" required>
+            </div>
+            <div class="form-group">
+                <label>תיאור:</label>
+                <textarea id="eventDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>צבע:</label>
+                <div class="color-picker">
+                    <div class="color-option selected" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)" data-color="pink"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" data-color="blue"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)" data-color="orange"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)" data-color="purple"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)" data-color="cyan"></div>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeEventForm()">ביטול</button>
+                <button type="button" class="btn btn-secondary" onclick="deleteEvent()" id="deleteBtn" style="display: none;">מחק</button>
+                <button type="submit" class="btn btn-primary">שמור</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let events = {};
+        let selectedCell = null;
+        let selectedColor = 'pink';
+        let editingEventId = null;
+
+        const names = ['פרקד', 'מהטב', 'יוסף', 'אמגד', 'נאל', 'וג\'ה', 'סייד', 'אבו עלי', 'עמראן', 'סומעה', 'סרכאן', 'מארד', 'מוספה', 'מחמוד', 'גורג', 'רגא', 'עדי'];
+        const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת', 'ראשון', 'שני', 'שלישי', 'רביעי', 'שישי'];
+        const times = ['שעתיים', 'חמישי', 'רביעי', 'שלישי', 'שני', 'ראשון'];
+
+        const colorGradients = {
+            pink: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            blue: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            orange: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            purple: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+            cyan: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)'
+        };
+
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            // Header row
+            const emptyHeader = document.createElement('div');
+            emptyHeader.className = 'header-cell';
+            calendar.appendChild(emptyHeader);
+
+            days.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'header-cell';
+                dayHeader.textContent = day;
+                calendar.appendChild(dayHeader);
+            });
+
+            // Data rows
+            names.forEach((name, nameIndex) => {
+                const nameCell = document.createElement('div');
+                nameCell.className = 'name-cell';
+                nameCell.textContent = name;
+                calendar.appendChild(nameCell);
+
+                days.forEach((day, dayIndex) => {
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'time-cell';
+                    timeCell.dataset.name = name;
+                    timeCell.dataset.day = day;
+                    timeCell.dataset.nameIndex = nameIndex;
+                    timeCell.dataset.dayIndex = dayIndex;
+                    
+                    const eventId = `${nameIndex}-${dayIndex}`;
+                    if (events[eventId]) {
+                        timeCell.className += ' occupied';
+                        timeCell.textContent = events[eventId].title;
+                        timeCell.style.background = colorGradients[events[eventId].color];
+                    }
+                    
+                    timeCell.addEventListener('click', () => selectCell(timeCell));
+                    calendar.appendChild(timeCell);
+                });
+            });
+
+            updateStats();
+        }
+
+        function selectCell(cell) {
+            // Remove previous selection
+            document.querySelectorAll('.time-cell.selected').forEach(c => c.classList.remove('selected'));
+            
+            selectedCell = cell;
+            cell.classList.add('selected');
+            
+            const eventId = `${cell.dataset.nameIndex}-${cell.dataset.dayIndex}`;
+            if (events[eventId]) {
+                openEventForm(eventId);
+            } else {
+                openEventForm();
+            }
+        }
+
+        function openEventForm(eventId = null) {
+            const overlay = document.getElementById('overlay');
+            const form = document.getElementById('eventForm');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            editingEventId = eventId;
+            
+            if (eventId && events[eventId]) {
+                // Editing existing event
+                document.getElementById('eventTitle').value = events[eventId].title;
+                document.getElementById('eventDescription').value = events[eventId].description || '';
+                selectColorOption(events[eventId].color);
+                deleteBtn.style.display = 'inline-block';
+            } else {
+                // Creating new event
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDescription').value = '';
+                selectColorOption('pink');
+                deleteBtn.style.display = 'none';
+            }
+            
+            overlay.style.display = 'block';
+            form.style.display = 'block';
+            
+            setTimeout(() => document.getElementById('eventTitle').focus(), 100);
+        }
+
+        function closeEventForm() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('eventForm').style.display = 'none';
+            document.querySelectorAll('.time-cell.selected').forEach(c => c.classList.remove('selected'));
+            selectedCell = null;
+            editingEventId = null;
+        }
+
+        function selectColorOption(color) {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-color="${color}"]`).classList.add('selected');
+            selectedColor = color;
+        }
+
+        function addEvent() {
+            if (!selectedCell) {
+                alert('אנא בחר תא בלוח הזמנים');
+                return;
+            }
+            openEventForm();
+        }
+
+        function saveEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            if (!title) {
+                alert('אנא הכנס כותרת לאירוע');
+                return;
+            }
+
+            if (!selectedCell) {
+                alert('אנא בחר תא בלוח הזמנים');
+                return;
+            }
+
+            const eventId = `${selectedCell.dataset.nameIndex}-${selectedCell.dataset.dayIndex}`;
+            const description = document.getElementById('eventDescription').value.trim();
+
+            events[eventId] = {
+                title,
+                description,
+                color: selectedColor,
+                name: selectedCell.dataset.name,
+                day: selectedCell.dataset.day,
+                timestamp: new Date().toISOString()
+            };
+
+            saveToStorage();
+            generateCalendar();
+            closeEventForm();
+        }
+
+        function deleteEvent() {
+            if (editingEventId && events[editingEventId]) {
+                if (confirm('האם אתה בטוח שברצונך למחוק את האירוע?')) {
+                    delete events[editingEventId];
+                    saveToStorage();
+                    generateCalendar();
+                    closeEventForm();
+                }
+            }
+        }
+
+        function clearAll() {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל האירועים?')) {
+                events = {};
+                saveToStorage();
+                generateCalendar();
+            }
+        }
+
+        function updateStats() {
+            const totalEvents = Object.keys(events).length;
+            const today = new Date().getDay();
+            const todayEvents = Object.values(events).filter(event => {
+                const eventDay = days.indexOf(event.day);
+                return eventDay === today;
+            }).length;
+
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('todayEvents').textContent = todayEvents;
+            document.getElementById('weekEvents').textContent = totalEvents; // Simplified for demo
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('hebrewCalendarEvents', JSON.stringify(events));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('hebrewCalendarEvents');
+            if (saved) {
+                events = JSON.parse(saved);
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(events, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'hebrew-calendar-events.json';
+            link.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedEvents = JSON.parse(e.target.result);
+                        if (confirm('האם אתה בטוח שברצונך לייבא נתונים? זה יחליף את הנתונים הנוכחיים.')) {
+                            events = importedEvents;
+                            saveToStorage();
+                            generateCalendar();
+                            alert('הנתונים יובאו בהצלחה!');
+                        }
+                    } catch (error) {
+                        alert('שגיאה בקריאת הקובץ. אנא ודא שהקובץ תקין.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('eventFormData').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveEvent();
+        });
+
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                selectColorOption(this.dataset.color);
+            });
+        });
+
+        // Initialize
+        loadFromStorage();
+        generateCalendar();
+    </script>
+</body>
+</html>
