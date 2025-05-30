@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרקד</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .difficulty-btn {
+            padding: 8px 15px;
+            border: 2px solid;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-btn.easy {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .difficulty-btn.medium {
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+
+        .difficulty-btn.hard {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .difficulty-btn.active {
+            background: currentColor;
+            color: white !important;
+            transform: scale(1.05);
+        }
+
+        .difficulty-btn.easy.active {
+            background: #28a745;
+        }
+
+        .difficulty-btn.medium.active {
+            background: #ffc107;
+        }
+
+        .difficulty-btn.hard.active {
+            background: #dc3545;
+        }
+
+        .checkpoint-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 20px;
+            border: 2px solid #28a745;
+        }
+
+        .checkpoint-indicator.unsaved {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+        }
+
+        .checkpoint-indicator .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .checkpoint-indicator.unsaved .status-dot {
+            background: #ffc107;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 150px repeat(12, 1fr);
+            gap: 1px;
+            background: #dee2e6;
+            margin: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-cell {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .name-cell {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-cell {
+            background: white;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .time-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+
+        .time-cell.easy {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .time-cell.medium {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .time-cell.hard {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .time-cell.selected {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+            z-index: 20;
+        }
+
+        .difficulty-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .difficulty-label {
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            min-width: 140px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-number.easy {
+            color: #28a745;
+        }
+
+        .stat-number.medium {
+            color: #ffc107;
+        }
+
+        .stat-number.hard {
+            color: #dc3545;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .instructions {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .instructions h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                font-size: 0.7rem;
+                margin: 15px;
+                grid-template-columns: 120px repeat(12, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .time-cell {
+                min-height: 50px;
+                font-size: 0.7rem;
+            }
+            
+            .difficulty-icon {
+                font-size: 1.2rem;
+            }
+        }
+
+        .clear-section {
+            padding: 15px 30px;
+            background: #fff3cd;
+            border-top: 1px solid #ffeaa7;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .legend-icon.easy {
+            background: #28a745;
+            color: white;
+        }
+
+        .legend-icon.medium {
+            background: #ffc107;
+            color: white;
+        }
+
+        .legend-icon.hard {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 לוח רמות קושי</h1>
+            <p>קבע רמת קושי לכל משימה ויום בלוח הזמנים</p>
+        </div>
+
+        <div class="controls">
+            <div class="difficulty-selector">
+                <span>בחר רמת קושי:</span>
+                <div class="difficulty-btn easy active" onclick="setCurrentDifficulty('easy')">🟢 שביב</div>
+                <div class="difficulty-btn medium" onclick="setCurrentDifficulty('medium')">🟡 הרצליה</div>
+                <div class="difficulty-btn hard" onclick="setCurrentDifficulty('hard')">🔴 פרדסיה</div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="clearAll()">🗑️ נקה הכל</button>
+            <button class="btn btn-secondary" onclick="exportData()">💾 ייצא נתונים</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📁 ייבא נתונים</button>
+            
+            <div class="checkpoint-indicator" id="checkpointStatus">
+                <div class="status-dot"></div>
+                <span id="checkpointText">נשמר אוטומטית</span>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-icon easy">ק</div>
+                <span>שביב </span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon medium">ב</div>
+                <span>הרצליה</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon hard">ק</div>
+                <span>פרדסיה</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number easy" id="easyCount">0</span>
+                <span class="stat-label">משימות קלות</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number medium" id="mediumCount">0</span>
+                <span class="stat-label">משימות בינוניות</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number hard" id="hardCount">0</span>
+                <span class="stat-label">משימות קשות</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalCount" style="color: #4facfe;">0</span>
+                <span class="stat-label">סה"כ משימות</span>
+            </div>
+        </div>
+
+        <div class="calendar-grid" id="calendar">
+            <!-- Calendar will be generated by JavaScript -->
+        </div>
+
+        <div class="instructions">
+            <h3>איך להשתמש:</h3>
+            <p>1. בחר רמת קושי מהכפתורים למעלה • 2. לחץ על תא בלוח הזמנים כדי לקבוע את הרמה • 3. הנתונים נשמרים אוטומטית</p>
+        </div>
+    </div>
+
+    <script>
+        let difficulties = {};
+        let currentDifficulty = 'easy';
+        let hasUnsavedChanges = false;
+        let autoSaveInterval;
+
+        const names = ['אביב', 'מור', 'יוסף', 'אמגד', 'נאל', 'ודיה', 'סייד', 'אבו עלי', 'עמראן', 'סומעה', 'סרכאן', 'מארד', 'מוספה', 'מחמוד', 'גורג', 'רגא', 'עדי'];
+        const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת', 'ראשון', 'שני', 'שלישי', 'רביעי', 'שישי'];
+
+        const difficultySettings = {
+            easy: {
+                label: 'שביב',
+                icon: '🟢',
+                color: 'easy'
+            },
+            medium: {
+                label: 'הרצליה',
+                icon: '🟡',
+                color: 'medium'
+            },
+            hard: {
+                label: 'פרדסיה',
+                icon: '🔴',
+                color: 'hard'
+            }
+        };
+
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            // Header row
+            const emptyHeader = document.createElement('div');
+            emptyHeader.className = 'header-cell';
+            emptyHeader.textContent = 'שם / יום';
+            calendar.appendChild(emptyHeader);
+
+            days.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'header-cell';
+                dayHeader.textContent = day;
+                calendar.appendChild(dayHeader);
+            });
+
+            // Data rows
+            names.forEach((name, nameIndex) => {
+                const nameCell = document.createElement('div');
+                nameCell.className = 'name-cell';
+                nameCell.textContent = name;
+                calendar.appendChild(nameCell);
+
+                days.forEach((day, dayIndex) => {
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'time-cell';
+                    timeCell.dataset.name = name;
+                    timeCell.dataset.day = day;
+                    timeCell.dataset.nameIndex = nameIndex;
+                    timeCell.dataset.dayIndex = dayIndex;
+                    
+                    const cellId = `${nameIndex}-${dayIndex}`;
+                    if (difficulties[cellId]) {
+                        const difficulty = difficulties[cellId];
+                        timeCell.className += ` ${difficulty}`;
+                        
+                        const icon = document.createElement('div');
+                        icon.className = 'difficulty-icon';
+                        icon.textContent = difficultySettings[difficulty].icon;
+                        
+                        const label = document.createElement('div');
+                        label.className = 'difficulty-label';
+                        label.textContent = difficultySettings[difficulty].label;
+                        
+                        timeCell.appendChild(icon);
+                        timeCell.appendChild(label);
+                    }
+                    
+                    timeCell.addEventListener('click', () => selectCell(timeCell));
+                    calendar.appendChild(timeCell);
+                });
+            });
+
+            updateStats();
+        }
+
+        function setCurrentDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            
+            // Update UI
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.difficulty-btn.${difficulty}`).classList.add('active');
+        }
+
+        function selectCell(cell) {
+            // Remove previous selection
+            document.querySelectorAll('.time-cell.selected').forEach(c => c.classList.remove('selected'));
+            
+            cell.classList.add('selected');
+            
+            const cellId = `${cell.dataset.nameIndex}-${cell.dataset.dayIndex}`;
+            
+            // Set or toggle difficulty
+            if (difficulties[cellId] === currentDifficulty) {
+                // Remove difficulty if clicking on same difficulty
+                delete difficulties[cellId];
+            } else {
+                // Set new difficulty
+                difficulties[cellId] = currentDifficulty;
+            }
+            
+            markUnsaved();
+            saveCheckpoint();
+            
+            // Regenerate calendar with new difficulty
+            generateCalendar();
+            
+            // Visual feedback
+            setTimeout(() => {
+                cell.classList.remove('selected');
+            }, 300);
+        }
+
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            const indicator = document.getElementById('checkpointStatus');
+            const text = document.getElementById('checkpointText');
+            
+            indicator.classList.add('unsaved');
+            text.textContent = 'יש שינויים שלא נשמרו';
+        }
+
+        function markSaved() {
+            hasUnsavedChanges = false;
+            const indicator = document.getElementById('checkpointStatus');
+            const text = document.getElementById('checkpointText');
+            
+            indicator.classList.remove('unsaved');
+            text.textContent = 'נשמר אוטומטית';
+            
+            // Show save confirmation for a moment
+            text.textContent = '✓ נשמר!';
+            setTimeout(() => {
+                text.textContent = 'נשמר אוטומטית';
+            }, 1500);
+        }
+
+        function saveCheckpoint() {
+            const checkpoint = {
+                difficulties: difficulties,
+                timestamp: new Date().toISOString(),
+                version: '2.0'
+            };
+            
+            try {
+                localStorage.setItem('hebrewDifficultyCalendar', JSON.stringify(checkpoint));
+                markSaved();
+            } catch (error) {
+                console.error('Failed to save checkpoint:', error);
+                const text = document.getElementById('checkpointText');
+                text.textContent = 'שגיאה בשמירה!';
+                setTimeout(() => {
+                    text.textContent = 'יש שינויים שלא נשמרו';
+                }, 3000);
+            }
+        }
+
+        function loadCheckpoint() {
+            try {
+                const saved = localStorage.getItem('hebrewDifficultyCalendar');
+                if (saved) {
+                    const checkpoint = JSON.parse(saved);
+                    difficulties = checkpoint.difficulties || {};
+                    return true;
+                }
+            } catch (error) {
+                console.error('Failed to load checkpoint:', error);
+            }
+            return false;
+        }
+
+        function clearAll() {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל רמות הקושי?')) {
+                difficulties = {};
+                markUnsaved();
+                saveCheckpoint();
+                generateCalendar();
+            }
+        }
+
+        function updateStats() {
+            const counts = {
+                easy: 0,
+                medium: 0,
+                hard: 0
+            };
+            
+            Object.values(difficulties).forEach(difficulty => {
+                if (counts[difficulty] !== undefined) {
+                    counts[difficulty]++;
+                }
+            });
+            
+            document.getElementById('easyCount').textContent = counts.easy;
+            document.getElementById('mediumCount').textContent = counts.medium;
+            document.getElementById('hardCount').textContent = counts.hard;
+            document.getElementById('totalCount').textContent = counts.easy + counts.medium + counts.hard;
+        }
+
+        function exportData() {
+            const exportData = {
+                difficulties: difficulties,
+                exportDate: new Date().toISOString(),
+                version: '2.0'
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `hebrew-difficulty-calendar-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (confirm('האם אתה בטוח שברצונך לייבא נתונים? זה יחליף את הנתונים הנוכחיים.')) {
+                            difficulties = importedData.difficulties || {};
+                            saveCheckpoint();
+                            generateCalendar();
+                            alert('הנתונים יובאו בהצלחה!');
+                        }
+                    } catch (error) {
+                        alert('שגיאה בקריאת הקובץ. אנא ודא שהקובץ תקין.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Auto-save setup
+        function setupAutoSave() {
+            autoSaveInterval = setInterval(() => {
+                if (hasUnsavedChanges) {
+                    saveCheckpoint();
+                }
+            }, 3000); // Save every 3 seconds
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Number keys for quick difficulty selection
+                if (e.key === '1') {
+                    setCurrentDifficulty('sssss');
+                } else if (e.key === '2') {
+                    setCurrentDifficulty('ddddd');
+                } else if (e.key === '3') {
+                    setCurrentDifficulty('hard');
+                }
+                
+                // Ctrl+S for manual save
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveCheckpoint();
+                }
+            });
+        }
+
+        // Initialize everything
+        function initialize() {
+            loadCheckpoint();
+            setupAutoSave();
+            setupKeyboardShortcuts();
+            generateCalendar();
+            
+            console.log('Hebrew Difficulty Calendar - Initialized successfully!');
+        }
+
+        // Start the application
+        initialize();
+    </script>
+</body>
+</html>
