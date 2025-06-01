@@ -446,9 +446,9 @@ function updateAssignmentSummary() {
     }
   });
 
-  let summary = `סך הכל שיבוצים: ${total}<br>`;
+  let summary = `סך הכל עובדים: ${total}<br>`;
   for (const [place, count] of Object.entries(counters)) {
-    summary += `${place}: ${count} שיבוצים<br>`;
+    summary += `${place}: ${count} עובדים<br>`;
   }
 
   document.getElementById('assignmentSummary').innerHTML = summary;
