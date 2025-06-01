@@ -1,0 +1,732 @@
+
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>מערכת הקצאת עובדים</title>
+<style>
+    body {
+font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+}
+    .container {
+max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+}
+    .header {
+background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+}
+    .controls, .instructions {
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .calendar-container {
+      overflow-x: auto;
+      margin: 2rem;
+    }
+    .calendar-grid {
+      display: grid;
+      min-width: 800px;
+      background: #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .calendar-grid .header-cell, .calendar-grid .name-cell, .calendar-grid .time-cell {
+      padding: 1rem;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+      transition: background 0.2s;
+    }
+    .calendar-grid .time-cell:hover {
+      background: #d6f0ff;
+    }
+    .calendar-grid .time-cell.assigned {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #2d2d2d;
+      color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 300px;
+    }
+    .place-choice {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .place-btn {
+      border: 2px solid transparent;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: bold;
+     color: #333; font-weight: bold;
+    .place-btn:hover {
+      border-color: #0056b3;
+      background: #e2e6ea;
+    }
+    
+button {
+  margin: 0.25rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #0056b3;
+  color: white;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+button:hover {
+  background: #003f88;
+}
+.btn-secondary {
+  background: #495057;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+    #checkpointStatus {
+      background: #e2e3e5;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+  
+
+/* Button style */
+button {
+  margin: 0.25rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.1s;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Dark header cells for days */
+.header-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* Dark name cells for workers */
+.name-cell {
+  background: #212529 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+</style>
+<style>
+  .place-color-0 { background-color: #d1ecf1 !important; border-color: #0c5460 !important; }
+  .place-color-1 { background-color: #d4edda !important; border-color: #155724 !important; }
+  .place-color-2 { background-color: #fff3cd !important; border-color: #856404 !important; }
+  .place-color-3 { background-color: #f8d7da !important; border-color: #721c24 !important; }
+  .place-color-4 { background-color: #e2e3e5 !important; border-color: #6c757d !important; }
+  .place-color-5 { background-color: #cfe2ff !important; border-color: #084298 !important; }
+  .place-color-6 { background-color: #e8daef !important; border-color: #512e5f !important; }
+
+
+/* Button style */
+button {
+  margin: 0.25rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.1s;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Dark header cells for days */
+.header-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* Dark name cells for workers */
+.name-cell {
+  background: #212529 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>🏢 מערכת הקצאת עובדים</h1>
+<p>ניהול משמרות ומקומות עבודה</p>
+</div>
+<div class="controls">
+<button onclick="saveSchedule()">💾 שמור</button>
+<input accept=".json" id="fileInput" onchange="loadSchedule(event)" style="display:none" type="file"/>
+<button onclick="document.getElementById('fileInput').click()">📂 טען</button>
+<button onclick="showAddPlaceModal()">➕ הוסף מקום</button>
+<button onclick="showAddWorkerModal()">👤 הוסף עובד</button>
+<button onclick="showManagePlacesModal()">⚙️ נהל מקומות</button>
+<button onclick="showManageWorkersModal()">👥 נהל עובדים</button>
+<button class="btn-secondary" onclick="clearAssignments()">🗑️ נקה הקצאות</button>
+<button class="btn-secondary" onclick="resetLocalStorage()">🔄 אפס הכל</button>
+</div>
+<div class="modal" id="editWorkerModal">
+  <div class="modal-content">
+    <h3>עריכת עובד</h3>
+    <input id="editWorkerName" placeholder="שם העובד" style="width: 100%; padding: 0.5rem;" type="text" />
+    <input id="editWorkerId" placeholder="תעודת זהות" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" type="text" />
+    <input id="editWorkerPhone" placeholder="טלפון" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" type="text" />
+    <div style="margin-top: 1rem; text-align: center;">
+      <button onclick="saveEditedWorker()">שמירה</button>
+      <button class="btn-secondary" onclick="closeEditWorkerModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="calendar-container">
+<div class="calendar-grid" id="calendar"></div>
+</div>
+<div id="assignmentSummary" style="text-align: center; margin-top: 20px; font-weight: bold;"></div>
+
+<div class="instructions">
+<h3>📌 הוראות שימוש</h3>
+<p>לחץ על תא כדי לבחור מקום. לחיצה כפולה תסיר את ההקצאה. השתמש בכפתורים לניהול העובדים והמקומות.</p>
+</div>
+</div>
+<div class="modal" id="placeSelectorModal">
+<div class="modal-content">
+<h3>בחר מקום</h3>
+<div class="place-choice" id="placeChoiceContainer"></div>
+<button class="btn-secondary" onclick="closePlaceSelector()">ביטול</button>
+</div>
+</div>
+<div class="modal" id="addPlaceModal">
+<div class="modal-content">
+<h3>הוסף מקום חדש</h3>
+<input id="newPlaceInput" placeholder="שם המקום" style="width: 100%; padding: 0.5rem;" type="text"/>
+<div style="margin-top: 1rem; text-align: center;">
+<button onclick="saveNewPlace()">שמירה</button>
+<button class="btn-secondary" onclick="closeAddPlaceModal()">ביטול</button>
+</div>
+</div>
+</div>
+<div class="modal" id="addWorkerModal">
+<div class="modal-content">
+
+<input id="newWorkerInput" placeholder="שם העובד" style="width: 100%; padding: 0.5rem;" type="text"/>
+<input id="newWorkerId" placeholder="תעודת זהות" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" type="text"/>
+<input id="newWorkerPhone" placeholder="טלפון" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" type="text"/>
+<h3>הוסף עובד חדש</h3>
+
+
+
+<div style="margin-top: 1rem; text-align: center;">
+<button onclick="saveNewWorker()">שמירה</button>
+<button class="btn-secondary" onclick="closeAddWorkerModal()">ביטול</button>
+</div>
+</div>
+</div>
+<script>
+function openPlaceSelector(cell) {
+  const container = document.getElementById("placeChoiceContainer");
+  container.innerHTML = '';
+  places.forEach((place, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'place-btn';
+    btn.textContent = place;
+    btn.onclick = () => {
+  cell.textContent = place;
+  cell.className = 'time-cell assigned place-color-' + (index % 7); // Use 7 color classes
+  closePlaceSelector();
+  autoSaveSchedule();
+  updateAssignmentSummary(); // Update the counters
+};
+
+
+    container.appendChild(btn);
+  });
+  document.getElementById("placeSelectorModal").style.display = 'flex';
+}
+
+function closePlaceSelector() {
+  document.getElementById("placeSelectorModal").style.display = 'none';
+}
+function clearAssignment(cell) {
+  cell.textContent = '';
+  cell.classList.remove('assigned');
+  updateAssignmentSummary();
+
+  autoSaveSchedule();
+}
+
+function showManageWorkersModal() {
+  const container = document.getElementById("workerListContainer");
+  container.innerHTML = '';
+  workers.forEach((worker, index) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.background = '#333';
+    row.style.padding = '0.5rem';
+    row.style.borderRadius = '6px';
+    row.style.color = 'white';
+    
+    const details = document.createElement('span');
+    details.innerHTML = `<strong>${worker.name}</strong> - ת.ז: ${worker.id} - 📞 ${worker.phone}`;
+    
+    const buttons = document.createElement('div');
+    buttons.innerHTML = `
+      <button onclick="editWorker(${index})">✏️</button>
+      <button class="btn-secondary" onclick="removeWorker(${index})">🗑️</button>
+    `;
+
+    row.appendChild(details);
+    row.appendChild(buttons);
+    container.appendChild(row);
+  });
+
+  document.getElementById("manageWorkersModal").style.display = 'flex';
+}
+function closeManageWorkersModal() {
+  document.getElementById("manageWorkersModal").style.display = "none";
+}
+function editWorker(index) {
+  const worker = workers[index];
+  const newName = prompt("שם חדש:", worker.name);
+  const newId = prompt("תעודת זהות חדשה:", worker.id);
+  const newPhone = prompt("טלפון חדש:", worker.phone);
+
+  if (newName && newId && newPhone) {
+    workers[index] = {
+      name: newName.trim(),
+      id: newId.trim(),
+      phone: newPhone.trim()
+    };
+    autoSaveSchedule();
+    showManageWorkersModal(); // Refresh the modal view
+  } else {
+    alert("כל השדות חייבים להיות מלאים.");
+  }
+}
+function removeWorker(index) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את העובד הזה?")) {
+    workers.splice(index, 1); // Remove from array
+    autoSaveSchedule();       // Save changes
+    showManageWorkersModal(); // Refresh the list
+  }
+}
+
+let editingWorkerIndex = null; // Track which worker is being edited
+
+function editWorker(index) {
+  const worker = workers[index];
+
+  // Fill form inputs with current data
+  document.getElementById("editWorkerName").value = worker.name;
+  document.getElementById("editWorkerId").value = worker.id;
+  document.getElementById("editWorkerPhone").value = worker.phone;
+
+  // Track which worker is being edited
+  editingWorkerIndex = index;
+
+  // 🔴 ADD THIS: Close the manage workers modal
+  closeManageWorkersModal();
+
+  // ✅ Show the edit modal
+  document.getElementById("editWorkerModal").style.display = "flex";
+}
+
+function saveEditedWorker() {
+  const name = document.getElementById("editWorkerName").value.trim();
+  const id = document.getElementById("editWorkerId").value.trim();
+  const phone = document.getElementById("editWorkerPhone").value.trim();
+
+  if (name && id && phone) {
+    // 1. Save changes to the array
+    workers[editingWorkerIndex] = { name, id, phone };
+
+    // 2. Save to storage
+    autoSaveSchedule();
+
+    // 3. Close the edit modal
+    closeEditWorkerModal();
+
+    // 4. ✅ Refresh the workers list ONLY IF it's currently open
+    if (document.getElementById("manageWorkersModal").style.display === "flex") {
+      showManageWorkersModal(); // 🔁 Refresh list on screen
+    }
+
+  } else {
+    alert("אנא מלא את כל השדות.");
+  }
+}
+
+function closeEditWorkerModal() {
+  document.getElementById("editWorkerModal").style.display = "none";
+  editingWorkerIndex = null;
+}
+
+function updateAssignmentSummary() {
+  const counters = {};
+  let total = 0;
+  places.forEach(place => counters[place] = 0);
+
+  document.querySelectorAll('.time-cell').forEach(cell => {
+    const place = cell.textContent.trim();
+    if (place && counters.hasOwnProperty(place)) {
+      counters[place]++;
+      total++;
+    }
+  });
+
+  let summary = `סך הכל עובדים: ${total}<br>`;
+  for (const [place, count] of Object.entries(counters)) {
+    summary += `${place}: ${count} עובדים<br>`;
+  }
+
+  document.getElementById('assignmentSummary').innerHTML = summary;
+}
+
+</script>
+
+<script>
+const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const workers = [];
+const places = [];
+
+function generateCalendar() {
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = '';
+  calendar.style.gridTemplateColumns = `repeat(${days.length + 1}, 1fr)`;
+
+  calendar.appendChild(createCell('', 'header-cell'));
+  days.forEach(day => calendar.appendChild(createCell(day, 'header-cell')));
+
+  workers.forEach(worker => {
+    const name = typeof worker === 'string' ? worker : worker.name;
+    const nameCell = createCell(name, 'name-cell');
+    nameCell.onclick = () => showWorkerDetails(worker);
+    calendar.appendChild(nameCell);
+    days.forEach(() => {
+      const cell = createCell('', 'time-cell');
+      cell.onclick = () => {
+        if (cell.textContent) {
+          clearAssignment(cell);
+        } else {
+          openPlaceSelector(cell);
+        }
+      };
+      calendar.appendChild(cell);
+    });
+  });
+}
+
+function createCell(text, className) {
+  const div = document.createElement('div');
+  div.className = className;
+  div.textContent = text;
+  return div;
+}
+
+function showWorkerDetails(worker) {
+  const text = typeof worker === 'string'
+    ? `<strong>שם:</strong> ${worker}<br><em>אין מידע נוסף</em>`
+    : `<strong>שם:</strong> ${worker.name}<br><strong>ת.ז:</strong> ${worker.id}<br><strong>טלפון:</strong> ${worker.phone}`;
+  document.getElementById("workerDetailsText").innerHTML = text;
+  document.getElementById("workerDetailsModal").style.display = "flex";
+}
+
+function closeWorkerDetailsModal() {
+  document.getElementById("workerDetailsModal").style.display = "none";
+}
+
+function saveNewWorker() {
+  const nameInput = document.getElementById("newWorkerInput");
+  const idInput = document.getElementById("newWorkerId");
+  const phoneInput = document.getElementById("newWorkerPhone");
+  const name = nameInput.value.trim();
+  const id = idInput.value.trim();
+  const phone = phoneInput.value.trim();
+  if (name && id && phone) {
+    workers.push({ name, id, phone });
+    closeAddWorkerModal();
+    generateCalendar();
+    autoSaveSchedule();
+  } else {
+    alert("אנא מלא את כל השדות.");
+  }
+}
+
+function autoSaveSchedule() {
+  const data = {
+    workers,
+    places,
+    assignments: []
+  };
+  const cells = document.querySelectorAll('.time-cell');
+  cells.forEach((cell, index) => {
+    if (cell.textContent) {
+      data.assignments.push({ index, value: cell.textContent });
+    }
+  });
+  localStorage.setItem("scheduleData", JSON.stringify(data));
+  updateAssignmentSummary();
+
+}
+
+function loadSchedule(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = JSON.parse(e.target.result);
+    workers.length = 0;
+    places.length = 0;
+    workers.push(...data.workers);
+    places.push(...data.places);
+    generateCalendar();
+    const cells = document.querySelectorAll('.time-cell');
+    data.assignments.forEach(a => {
+      if (cells[a.index]) {
+        cells[a.index].textContent = a.value;
+        cells[a.index].classList.add('assigned');
+        updateAssignmentSummary();
+
+      }
+    });
+    autoSaveSchedule();
+  };
+  reader.readAsText(file);
+}
+
+window.onload = () => {
+  const saved = localStorage.getItem("scheduleData");
+  if (saved) {
+    const data = JSON.parse(saved);
+    workers.push(...data.workers);
+    places.push(...data.places);
+    generateCalendar();
+    const cells = document.querySelectorAll('.time-cell');
+    data.assignments.forEach(a => {
+      if (cells[a.index]) {
+        cells[a.index].textContent = a.value;
+        cells[a.index].classList.add('assigned');
+      }
+    });
+  } else {
+    generateCalendar();
+  }
+};
+
+
+function showAddPlaceModal() {
+  document.getElementById("addPlaceModal").style.display = "flex";
+}
+
+function closeAddPlaceModal() {
+  document.getElementById("addPlaceModal").style.display = "none";
+  document.getElementById("newPlaceInput").value = '';
+}
+
+function saveNewPlace() {
+  const input = document.getElementById("newPlaceInput");
+  const name = input.value.trim();
+  if (name) {
+    places.push(name);
+    closeAddPlaceModal();
+    autoSaveSchedule();
+  } else {
+    alert("אנא הזן שם מקום.");
+  }
+}
+
+function showAddWorkerModal() {
+  document.getElementById("addWorkerModal").style.display = "flex";
+}
+
+function closeAddWorkerModal() {
+  document.getElementById("addWorkerModal").style.display = "none";
+  document.getElementById("newWorkerInput").value = '';
+  document.getElementById("newWorkerId").value = '';
+  document.getElementById("newWorkerPhone").value = '';
+}
+
+function saveSchedule() {
+  const data = {
+    workers,
+    places,
+    assignments: []
+  };
+  const cells = document.querySelectorAll('.time-cell');
+  cells.forEach((cell, index) => {
+    if (cell.textContent) {
+      data.assignments.push({ index, value: cell.textContent });
+    }
+  });
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "schedule.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAssignments() {
+  document.querySelectorAll('.time-cell').forEach(cell => {
+    clearAssignment(cell);
+  });
+  updateAssignmentSummary();
+
+}
+
+function resetLocalStorage() {
+  if (confirm("האם אתה בטוח שברצונך לאפס את כל הנתונים?")) {
+    localStorage.removeItem("scheduleData");
+    location.reload();
+  }
+}
+
+
+function showManagePlacesModal() {
+  const container = document.getElementById("placeListContainer");
+  container.innerHTML = '';
+  places.forEach((place, index) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.background = '#333';
+    row.style.padding = '0.5rem';
+    row.style.borderRadius = '6px';
+    row.innerHTML = `
+      <span style="color: white; font-weight: bold;">${place}</span>
+      <div>
+        <button onclick="renamePlace(${index})">✏️</button>
+        <button class="btn-secondary" onclick="removePlace(${index})">🗑️</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  document.getElementById("managePlacesModal").style.display = 'flex';
+}
+
+function closeManagePlacesModal() {
+  document.getElementById("managePlacesModal").style.display = "none";
+}
+
+function renamePlace(index) {
+  const newName = prompt("הזן שם חדש למקום:", places[index]);
+  if (newName) {
+    places[index] = newName.trim();
+    showManagePlacesModal();
+    autoSaveSchedule();
+  }
+}
+
+function removePlace(index) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את המקום הזה?")) {
+    places.splice(index, 1);
+    showManagePlacesModal();
+    autoSaveSchedule();
+  }
+}
+</script>
+<div class="modal" id="managePlacesModal">
+<div class="modal-content">
+<h3>ניהול מקומות</h3>
+<div id="placeListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+<button class="btn-secondary" onclick="closeManagePlacesModal()">סגור</button>
+</div>
+</div>
+<div class="modal" id="manageWorkersModal">
+<div class="modal-content">
+<h3>ניהול עובדים</h3>
+<div id="workerListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+<button class="btn-secondary" onclick="closeManageWorkersModal()">סגור</button>
+</div>
+</div>
+<div class="modal" id="workerDetailsModal">
+<div class="modal-content">
+<h3>פרטי עובד</h3>
+<p id="workerDetailsText"></p>
+<button class="btn-secondary" onclick="closeWorkerDetailsModal()">סגור</button>
+</div>
+</div>
+
+<div class="modal" id="managePlacesModal">
+<div class="modal-content">
+<h3>ניהול מקומות</h3>
+<div id="placeListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+<button class="btn-secondary" onclick="closeManagePlacesModal()">סגור</button>
+</div>
+</div>
+</body>
+</html>
