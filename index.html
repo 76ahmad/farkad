@@ -1,0 +1,615 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מערכת הקצאת עובדים</title>
+  <style>
+    body {
+font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+}
+    .container {
+max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+}
+    .header {
+background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+}
+    .controls, .instructions {
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .calendar-container {
+      overflow-x: auto;
+      margin: 2rem;
+    }
+    .calendar-grid {
+      display: grid;
+      min-width: 800px;
+      background: #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .calendar-grid .header-cell, .calendar-grid .name-cell, .calendar-grid .time-cell {
+      padding: 1rem;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+      transition: background 0.2s;
+    }
+    .calendar-grid .time-cell:hover {
+      background: #d6f0ff;
+    }
+    .calendar-grid .time-cell.assigned {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #2d2d2d;
+      color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 300px;
+    }
+    .place-choice {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .place-btn {
+      border: 2px solid transparent;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: bold;
+     color: #333; font-weight: bold;
+    .place-btn:hover {
+      border-color: #0056b3;
+      background: #e2e6ea;
+    }
+    
+button {
+  margin: 0.25rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #0056b3;
+  color: white;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+button:hover {
+  background: #003f88;
+}
+.btn-secondary {
+  background: #495057;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+    #checkpointStatus {
+      background: #e2e3e5;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+  
+
+/* Button style */
+button {
+  margin: 0.25rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.1s;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Dark header cells for days */
+.header-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* Dark name cells for workers */
+.name-cell {
+  background: #212529 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+</style>
+
+<style>
+  .place-color-0 { background-color: #d1ecf1 !important; border-color: #0c5460 !important; }
+  .place-color-1 { background-color: #d4edda !important; border-color: #155724 !important; }
+  .place-color-2 { background-color: #fff3cd !important; border-color: #856404 !important; }
+  .place-color-3 { background-color: #f8d7da !important; border-color: #721c24 !important; }
+  .place-color-4 { background-color: #e2e3e5 !important; border-color: #6c757d !important; }
+  .place-color-5 { background-color: #cfe2ff !important; border-color: #084298 !important; }
+  .place-color-6 { background-color: #e8daef !important; border-color: #512e5f !important; }
+
+
+/* Button style */
+button {
+  margin: 0.25rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.1s;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Dark header cells for days */
+.header-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* Dark name cells for workers */
+.name-cell {
+  background: #212529 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+</style>
+</head>
+<body>
+  
+<div style="background: #ffc107; color: #000; text-align: center; padding: 1rem; font-weight: bold;">
+  🔒 גרסת הדגמה - הנתונים נשמרים מקומית בלבד ולא נשלחים לשרת
+</div>
+
+<div class="container">
+    <div class="header">
+      <h1>🏢 מערכת הקצאת עובדים</h1>
+      <p>ניהול משמרות ומקומות עבודה</p>
+    </div>
+
+    
+<div class="controls">
+  <button onclick="showAddPlaceModal()">➕ הוסף מקום</button>
+  <button onclick="showAddWorkerModal()">👤 הוסף עובד</button>
+  <button onclick="showManagePlacesModal()">⚙️ נהל מקומות</button>
+  <button onclick="showManageWorkersModal()">👥 נהל עובדים</button>
+  <button class="btn-secondary" onclick="clearAssignments()">🗑️ נקה הקצאות</button>
+  <button class="btn-secondary" onclick="resetLocalStorage()">🔄 אפס הכל</button>
+</div>
+
+<div class="calendar-container">
+      <div class="calendar-grid" id="calendar"></div>
+    </div>
+
+    <div class="instructions">
+      <h3>📌 הוראות שימוש</h3>
+      <p>לחץ על תא כדי לבחור מקום. לחיצה כפולה תסיר את ההקצאה. השתמש בכפתורים לניהול העובדים והמקומות.</p>
+    </div>
+  </div>
+
+  <div id="placeSelectorModal" class="modal">
+    <div class="modal-content">
+      <h3>בחר מקום</h3>
+      <div class="place-choice" id="placeChoiceContainer"></div>
+      <button class="btn-secondary" onclick="closePlaceSelector()">ביטול</button>
+    </div>
+  </div>
+
+  <div id="addPlaceModal" class="modal">
+    <div class="modal-content">
+      <h3>הוסף מקום חדש</h3>
+      <input type="text" id="newPlaceInput" placeholder="שם המקום" style="width: 100%; padding: 0.5rem;" />
+      <div style="margin-top: 1rem; text-align: center;">
+        <button onclick="saveNewPlace()">שמירה</button>
+        <button class="btn-secondary" onclick="closeAddPlaceModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="addWorkerModal" class="modal">
+    <div class="modal-content">
+      <h3>הוסף עובד חדש</h3>
+      <input type="text" id="newWorkerInput" placeholder="שם העובד" style="width: 100%; padding: 0.5rem;" />
+      <div style="margin-top: 1rem; text-align: center;">
+        <button onclick="saveNewWorker()">שמירה</button>
+        <button class="btn-secondary" onclick="closeAddWorkerModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    const workers = [];
+    const places = [];
+
+    function generateCalendar() {
+      const calendar = document.getElementById("calendar");
+      calendar.innerHTML = '';
+      calendar.style.gridTemplateColumns = `repeat(${days.length + 1}, 1fr)`;
+
+      calendar.appendChild(createCell('', 'header-cell'));
+      days.forEach(day => calendar.appendChild(createCell(day, 'header-cell')));
+
+      workers.forEach(worker => {
+        calendar.appendChild(createCell(worker, 'name-cell'));
+        days.forEach(() => {
+          const cell = createCell('', 'time-cell');
+          cell.onclick = () => {
+            if (cell.textContent) {
+              clearAssignment(cell);
+            } else {
+              openPlaceSelector(cell);
+            }
+          };
+          calendar.appendChild(cell);
+        });
+      });
+    }
+
+    function createCell(text, className) {
+      const div = document.createElement('div');
+      div.className = className;
+      div.textContent = text;
+      return div;
+    }
+
+    function openPlaceSelector(cell) {
+      const modal = document.getElementById("placeSelectorModal");
+      const container = document.getElementById("placeChoiceContainer");
+      container.innerHTML = '';
+      places.forEach(place => {
+        const btn = document.createElement('button');
+        btn.className = 'place-btn';
+        btn.textContent = place;
+        btn.onclick = () => {
+          cell.textContent = place;
+          
+    const placeIndex = places.indexOf(place);
+    for (let i = 0; i < 10; i++) cell.classList.remove('place-color-' + i);
+    if (placeIndex >= 0) cell.classList.add('place-color-' + (placeIndex % 7));
+    cell.classList.add('assigned');
+    autoSaveSchedule();
+          closePlaceSelector();
+        };
+        container.appendChild(btn);
+      });
+      modal.style.display = 'flex';
+    }
+
+    
+function clearAssignment(cell) {
+  cell.textContent = '';
+  cell.classList.remove('assigned');
+  for (let i = 0; i < 10; i++) cell.classList.remove('place-color-' + i);
+  autoSaveSchedule();
+}
+
+
+    function closePlaceSelector() {
+      document.getElementById("placeSelectorModal").style.display = "none";
+    }
+
+    function showAddPlaceModal() {
+      document.getElementById("addPlaceModal").style.display = "flex";
+    }
+
+    function closeAddPlaceModal() {
+      document.getElementById("addPlaceModal").style.display = "none";
+      document.getElementById("newPlaceInput").value = '';
+    }
+
+    function saveNewPlace() {
+      const input = document.getElementById("newPlaceInput");
+      const name = input.value.trim();
+      if (name) {
+        places.push(name);
+        closeAddPlaceModal();
+    autoSaveSchedule();
+      } else {
+        alert("אנא הזן שם מקום.");
+      }
+    }
+
+    function showAddWorkerModal() {
+      document.getElementById("addWorkerModal").style.display = "flex";
+    }
+
+    function closeAddWorkerModal() {
+      document.getElementById("addWorkerModal").style.display = "none";
+      document.getElementById("newWorkerInput").value = '';
+    }
+
+    function saveNewWorker() {
+      const input = document.getElementById("newWorkerInput");
+      const name = input.value.trim();
+      if (name) {
+        workers.push(name);
+        closeAddWorkerModal();
+        generateCalendar();
+    autoSaveSchedule();
+      } else {
+        alert("אנא הזן שם עובד.");
+      }
+    }
+
+    function clearAssignments() {
+      document.querySelectorAll('.time-cell').forEach(cell => {
+        clearAssignment(cell);
+      });
+    }
+
+    
+function autoSaveSchedule() {
+  const data = {
+    workers,
+    places,
+    assignments: []
+  };
+  const cells = document.querySelectorAll('.time-cell');
+  cells.forEach((cell, index) => {
+    if (cell.textContent) {
+      data.assignments.push({ index, value: cell.textContent });
+    }
+  });
+  localStorage.setItem("scheduleData", JSON.stringify(data));
+}
+
+
+
+window.onload = () => {
+  const saved = localStorage.getItem("scheduleData");
+  if (saved) {
+    const data = JSON.parse(saved);
+    workers.push(...data.workers);
+    places.push(...data.places);
+    generateCalendar();
+    autoSaveSchedule();
+    const cells = document.querySelectorAll('.time-cell');
+    data.assignments.forEach(a => {
+      if (cells[a.index]) {
+        cells[a.index].textContent = a.value;
+        cells[a.index].classList.add('assigned');
+      }
+    });
+  } else {
+    generateCalendar();
+    autoSaveSchedule();
+  }
+};
+
+  
+    function saveSchedule() {
+      const data = {
+        workers,
+        places,
+        assignments: []
+      };
+      const cells = document.querySelectorAll('.time-cell');
+      cells.forEach((cell, index) => {
+        if (cell.textContent) {
+          data.assignments.push({ index, value: cell.textContent });
+        }
+      });
+      const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "schedule.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadSchedule(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = JSON.parse(e.target.result);
+        workers.length = 0;
+        places.length = 0;
+        workers.push(...data.workers);
+        places.push(...data.places);
+        generateCalendar();
+    autoSaveSchedule();
+        const cells = document.querySelectorAll('.time-cell');
+        data.assignments.forEach(a => {
+          if (cells[a.index]) {
+            cells[a.index].textContent = a.value;
+            cells[a.index].classList.add('assigned');
+          }
+        });
+      };
+      reader.readAsText(file);
+    }
+
+
+function showManagePlacesModal() {
+  const container = document.getElementById("placeListContainer");
+  container.innerHTML = '';
+  places.forEach((place, index) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.background = '#333';
+    row.style.padding = '0.5rem';
+    row.style.borderRadius = '6px';
+    row.innerHTML = `
+      <span style="color: white; font-weight: bold;">${place}</span>
+      <div>
+        <button onclick="renamePlace(${index})">✏️</button>
+        <button class="btn-secondary" onclick="removePlace(${index})">🗑️</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  document.getElementById("managePlacesModal").style.display = 'flex';
+}
+
+function closeManagePlacesModal() {
+  document.getElementById("managePlacesModal").style.display = 'none';
+}
+
+function renamePlace(index) {
+  const newName = prompt("הזן שם חדש למקום:", places[index]);
+  if (newName) {
+    places[index] = newName.trim();
+    showManagePlacesModal();
+    autoSaveSchedule();
+    autoSaveSchedule();
+  }
+}
+
+function removePlace(index) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את המקום הזה?")) {
+    places.splice(index, 1);
+    showManagePlacesModal();
+    autoSaveSchedule();
+    autoSaveSchedule();
+  }
+}
+
+
+function showManageWorkersModal() {
+  const container = document.getElementById("workerListContainer");
+  container.innerHTML = '';
+  workers.forEach((worker, index) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.background = '#333';
+    row.style.padding = '0.5rem';
+    row.style.borderRadius = '6px';
+    row.innerHTML = `
+      <span style="color: white; font-weight: bold;">${worker}</span>
+      <div>
+        <button onclick="renameWorker(${index})">✏️</button>
+        <button class="btn-secondary" onclick="removeWorker(${index})">🗑️</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  document.getElementById("manageWorkersModal").style.display = 'flex';
+}
+
+function closeManageWorkersModal() {
+  document.getElementById("manageWorkersModal").style.display = 'none';
+}
+
+function renameWorker(index) {
+  const newName = prompt("הזן שם חדש לעובד:", workers[index]);
+  if (newName) {
+    workers[index] = newName.trim();
+    generateCalendar();
+    autoSaveSchedule();
+    showManageWorkersModal();
+    autoSaveSchedule();
+    autoSaveSchedule();
+  }
+}
+
+function removeWorker(index) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את העובד הזה?")) {
+    workers.splice(index, 1);
+    generateCalendar();
+    autoSaveSchedule();
+    showManageWorkersModal();
+    autoSaveSchedule();
+    autoSaveSchedule();
+  }
+}
+
+
+function resetLocalStorage() {
+  if (confirm("האם אתה בטוח שברצונך לאפס את כל הנתונים?")) {
+    localStorage.removeItem("scheduleData");
+    location.reload();
+  }
+}
+
+</script>
+
+<div id="managePlacesModal" class="modal">
+  <div class="modal-content">
+    <h3>ניהול מקומות</h3>
+    <div id="placeListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    <button class="btn-secondary" onclick="closeManagePlacesModal()">סגור</button>
+  </div>
+</div>
+
+
+<div id="manageWorkersModal" class="modal">
+  <div class="modal-content">
+    <h3>ניהול עובדים</h3>
+    <div id="workerListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    <button class="btn-secondary" onclick="closeManageWorkersModal()">סגור</button>
+  </div>
+</div>
+
+</body>
+</html>
