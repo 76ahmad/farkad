@@ -1,14 +1,7 @@
 
 <!DOCTYPE html>
-
 <html dir="rtl" lang="he">
 <head>
-    <script>
-  if (window.location.hostname === "www.farkad.xyz") {
-    window.location.href = "https://farkad.xyz" + window.location.pathname;
-  }
-</script>
-
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>מערכת הקצאת עובדים</title>
@@ -224,6 +217,51 @@ button:hover {
 }
 
 </style>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    authDomain: "farkad-scheduler.firebaseapp.com",
+    projectId: "farkad-scheduler",
+    storageBucket: "farkad-scheduler.firebasestorage.app",
+    messagingSenderId: "71149615141",
+    appId: "1:71149615141:web:97eac63fe0c39d4831a7cc",
+    measurementId: "G-41H0PK4LMR"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const db = getFirestore();
+
+  // Check if user is logged in
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      // 🔽 Load user's schedule from Firestore
+      const userDoc = doc(db, "schedules", user.uid);
+      const userData = await getDoc(userDoc);
+      if (userData.exists()) {
+        const data = userData.data();
+        loadScheduleFromFirebase(data);
+      } else {
+        console.log("No schedule data yet.");
+      }
+    }
+  });
+
+  // Save schedule to Firestore
+  window.saveScheduleToFirebase = async function(data) {
+    const user = auth.currentUser;
+    if (!user) return;
+    const userDoc = doc(db, "schedules", user.uid);
+    await setDoc(userDoc, data);
+    alert("Schedule saved to cloud!");
+  }
+</script>
+
 </head>
 <body>
 <div class="container">
@@ -542,10 +580,26 @@ function autoSaveSchedule() {
       data.assignments.push({ index, value: cell.textContent });
     }
   });
-  localStorage.setItem("scheduleData", JSON.stringify(data));
+  localStorage.setItem("scheduleData", JSON.stringify(data)); // still keep local copy
+  saveScheduleToFirebase(data); // 🔁 save to cloud
   updateAssignmentSummary();
-
 }
+function loadScheduleFromFirebase(data) {
+  workers.length = 0;
+  places.length = 0;
+  workers.push(...data.workers);
+  places.push(...data.places);
+  generateCalendar();
+  const cells = document.querySelectorAll('.time-cell');
+  data.assignments.forEach(a => {
+    if (cells[a.index]) {
+      cells[a.index].textContent = a.value;
+      cells[a.index].classList.add('assigned');
+    }
+  });
+  updateAssignmentSummary();
+}
+
 
 function loadSchedule(event) {
   const file = event.target.files[0];
