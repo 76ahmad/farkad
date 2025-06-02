@@ -222,7 +222,7 @@ button:hover {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
   const firebaseConfig = {
     authDomain: "farkad-scheduler.firebaseapp.com",
@@ -237,22 +237,26 @@ button:hover {
   const auth = getAuth();
   const db = getFirestore();
 
-  // Check if user is logged in
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      alert("🔐 You must be logged in.");
       window.location.href = "login.html";
-    } else {
-      // 🔽 Load user's schedule from Firestore
-      const userDoc = doc(db, "schedules", user.uid);
-      const userData = await getDoc(userDoc);
-      if (userData.exists()) {
-        const data = userData.data();
-        loadScheduleFromFirebase(data);
-      } else {
-        console.log("No schedule data yet.");
-      }
+      return;
     }
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+
+    if (!userDoc.exists() || !userDoc.data().paid) {
+      alert("⛔ You are not approved. Contact support.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    // If we got here, the user is approved — continue loading the app.
+    console.log("✅ User is logged in and approved.");
   });
+</script>
+
 
   // Save schedule to Firestore
   window.saveScheduleToFirebase = async function(data) {
@@ -266,7 +270,7 @@ button:hover {
 
 </head>
 <body>
-  <script type="module" src="guard.js"></script>
+  
 <div class="container">
 <div class="header">
 <h1>🏢 מערכת הקצאת עובדים</h1>
