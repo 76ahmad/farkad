@@ -264,17 +264,6 @@ button:hover {
     alert("✅ Schedule saved to the cloud.");
   };
 
-window.logout = () => {
-  const auth = getAuth();
-  signOut(auth)
-    .then(() => {
-      alert("התנתקת בהצלחה");
-      window.location.href = "login.html";
-    })
-    .catch((error) => {
-      alert("שגיאה: " + error.message);
-    });
-};
 
 </script>
 
@@ -288,7 +277,6 @@ window.logout = () => {
 <p>ניהול משמרות ומקומות עבודה</p>
 </div>
 <div class="controls">
-    <button onclick="logout()">🚪 התנתק</button>
 <button onclick="saveSchedule()">💾  שמור בשם</button>
 <input accept=".json" id="fileInput" onchange="loadSchedule(event)" style="display:none" type="file"/>
 <button onclick="document.getElementById('fileInput').click()">📂 טען</button>
