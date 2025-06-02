@@ -226,7 +226,7 @@ button:hover {
 <p>ניהול משמרות ומקומות עבודה</p>
 </div>
 <div class="controls">
-<button onclick="saveSchedule()">💾 שמור</button>
+<button onclick="saveSchedule()">💾  שמור בשם</button>
 <input accept=".json" id="fileInput" onchange="loadSchedule(event)" style="display:none" type="file"/>
 <button onclick="document.getElementById('fileInput').click()">📂 טען</button>
 <button onclick="showAddPlaceModal()">➕ הוסף מקום</button>
@@ -619,6 +619,9 @@ function closeAddWorkerModal() {
 }
 
 function saveSchedule() {
+  const fileName = prompt("הזן שם קובץ לשמירה:", "schedule.json");
+  if (!fileName) return;
+
   const data = {
     workers,
     places,
@@ -634,10 +637,11 @@ function saveSchedule() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "schedule.json";
+  a.download = fileName.endsWith(".json") ? fileName : fileName + ".json";
   a.click();
   URL.revokeObjectURL(url);
 }
+
 
 function clearAssignments() {
   document.querySelectorAll('.time-cell').forEach(cell => {
