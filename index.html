@@ -156,23 +156,23 @@ button:hover {
 
 /* Dark header cells for days */
 .header-cell {
-  background: #343a40 !important;
-  color: #fff !important;
+  background: #343a40 !ant;
+  color: #fff !ant;
   font-weight: bold;
 }
 
 /* Dark name cells for workers */
 .name-cell {
-  background: #212529 !important;
-  color: #fff !important;
+  background: #212529 !ant;
+  color: #fff !ant;
   font-weight: bold;
 }
 
 </style>
 <style>
-  .place-color-0 { background-color: #d1ecf1 !important; border-color: #0c5460 !important; }
-  .place-color-1 { background-color: #d4edda !important; border-color: #155724 !important; }
-  .place-color-2 { background-color: #fff3cd !important; border-color: #856404 !important; }
+  .place-color-0 { background-color: #d1ecf1 !ant; border-color: #0c5460 !ant; }
+  .place-color-1 { background-color: #d4edda !ant; border-color: #155724 !ant; }
+  .place-color-2 { background-color: #fff3cd !ant; border-color: #856404 !ant; }
   .place-color-3 { background-color: #f8d7da !important; border-color: #721c24 !important; }
   .place-color-4 { background-color: #e2e3e5 !important; border-color: #6c757d !important; }
   .place-color-5 { background-color: #cfe2ff !important; border-color: #084298 !important; }
@@ -222,7 +222,7 @@ button:hover {
 <!-- 🔐 Guard Script: Auth Check + Redirect -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -263,7 +263,6 @@ button:hover {
     await setDoc(userDoc, data);
     alert("✅ Schedule saved to the cloud.");
   };
-    import { signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 window.logout = () => {
   const auth = getAuth();
