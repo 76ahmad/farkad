@@ -219,10 +219,11 @@ button:hover {
 }
 
 </style>
+<!-- 🔐 Guard Script: Auth Check + Redirect -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
   const firebaseConfig = {
     authDomain: "farkad-scheduler.firebaseapp.com",
@@ -237,6 +238,7 @@ button:hover {
   const auth = getAuth();
   const db = getFirestore();
 
+  // Auth check on page load
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       alert("🔐 You must be logged in.");
@@ -245,30 +247,24 @@ button:hover {
     }
 
     const userDoc = await getDoc(doc(db, "users", user.uid));
-
     if (!userDoc.exists() || !userDoc.data().paid) {
       alert("⛔ You are not approved. Contact support.");
       window.location.href = "login.html";
-      return;
+    } else {
+      console.log("✅ User is logged in and approved.");
     }
-
-    // If we got here, the user is approved — continue loading the app.
-    console.log("✅ User is logged in and approved.");
   });
-<script type="module">
-  import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-  const auth = getAuth();
-  const db = getFirestore();
-
+  // Save schedule to Firestore
   window.saveScheduleToFirebase = async function(data) {
     const user = auth.currentUser;
     if (!user) return;
     const userDoc = doc(db, "schedules", user.uid);
     await setDoc(userDoc, data);
-    alert("Schedule saved to cloud!");
+    alert("✅ Schedule saved to the cloud.");
   };
+</script>
+
 </script>
 
 
