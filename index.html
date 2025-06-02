@@ -255,18 +255,22 @@ button:hover {
     // If we got here, the user is approved — continue loading the app.
     console.log("✅ User is logged in and approved.");
   });
-</script>
+<script type="module">
+  import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+  const auth = getAuth();
+  const db = getFirestore();
 
-  // Save schedule to Firestore
   window.saveScheduleToFirebase = async function(data) {
     const user = auth.currentUser;
     if (!user) return;
     const userDoc = doc(db, "schedules", user.uid);
     await setDoc(userDoc, data);
     alert("Schedule saved to cloud!");
-  }
+  };
 </script>
+
 
 </head>
 <body>
