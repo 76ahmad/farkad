@@ -263,10 +263,10 @@
             color: #888;
         }
 
-        /* Print styles - COMPLETELY REWRITTEN */
+        /* Print styles - OPTIMIZED FOR MANY WORKERS */
         @page {
             size: A4 landscape;
-            margin: 15mm;
+            margin: 10mm;
         }
         
         @media print {
@@ -280,7 +280,7 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 font-family: Arial, sans-serif !important;
-                font-size: 12px !important;
+                font-size: 9px !important;
                 color: black !important;
             }
             
@@ -307,7 +307,7 @@
                 overflow: visible !important;
             }
             
-            /* Print table styles */
+            /* Print table styles - COMPRESSED */
             .calendar-table {
                 width: 100% !important;
                 border-collapse: collapse !important;
@@ -315,43 +315,54 @@
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 page-break-inside: avoid !important;
+                table-layout: fixed !important;
             }
             
             .calendar-table th,
             .calendar-table td {
-                border: 2px solid black !important;
-                padding: 8px !important;
+                border: 1px solid black !important;
+                padding: 3px 2px !important;
                 text-align: center !important;
                 vertical-align: middle !important;
-                font-size: 11px !important;
-                line-height: 1.2 !important;
+                font-size: 8px !important;
+                line-height: 1.1 !important;
+                height: 18px !important;
+                max-height: 18px !important;
+                overflow: hidden !important;
             }
             
             .calendar-table th {
                 background: #f0f0f0 !important;
                 color: black !important;
                 font-weight: bold !important;
-                font-size: 12px !important;
+                font-size: 9px !important;
+                height: 20px !important;
+                max-height: 20px !important;
             }
             
             .calendar-table th.corner-cell {
-                font-size: 10px !important;
+                font-size: 7px !important;
                 background: #f0f0f0 !important;
                 font-weight: bold !important;
+                padding: 2px 1px !important;
             }
             
             .calendar-table .name-cell {
                 background: #e0e0e0 !important;
                 color: black !important;
                 font-weight: bold !important;
-                font-size: 11px !important;
+                font-size: 8px !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
             }
             
             .calendar-table .time-cell {
                 background: white !important;
                 color: black !important;
-                font-size: 10px !important;
-                min-height: 25px !important;
+                font-size: 7px !important;
+                min-height: 18px !important;
+                max-height: 18px !important;
+                font-weight: normal !important;
             }
             
             .calendar-table .time-cell.assigned {
@@ -360,16 +371,17 @@
                 color: black !important;
             }
             
-            /* Ensure proper column widths for printing */
+            /* Ensure proper column widths for printing - COMPRESSED */
             .calendar-table th:first-child,
             .calendar-table td:first-child {
-                width: 15% !important;
-                min-width: 100px !important;
+                width: 12% !important;
+                min-width: 60px !important;
+                max-width: 80px !important;
             }
             
             .calendar-table th:not(:first-child),
             .calendar-table td:not(:first-child) {
-                width: 12.14% !important; /* (100% - 15%) / 7 days */
+                width: 12.57% !important; /* (100% - 12%) / 7 days */
             }
         }
     </style>
@@ -493,8 +505,53 @@
         const workers = [];
         const places = [];
 
+        // Function to preserve current assignments before regenerating calendar
+        function preserveAssignments() {
+            const assignments = [];
+            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            
+            rows.forEach((row, workerIndex) => {
+                const cells = row.querySelectorAll('.time-cell');
+                cells.forEach((cell, dayIndex) => {
+                    if (cell.textContent.trim()) {
+                        assignments.push({
+                            workerIndex: workerIndex,
+                            dayIndex: dayIndex,
+                            value: cell.textContent.trim(),
+                            assigned: cell.classList.contains('assigned')
+                        });
+                    }
+                });
+            });
+            
+            return assignments;
+        }
+
+        // Function to restore assignments after regenerating calendar
+        function restoreAssignments(assignments) {
+            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            
+            assignments.forEach(assignment => {
+                if (rows[assignment.workerIndex]) {
+                    const cells = rows[assignment.workerIndex].querySelectorAll('.time-cell');
+                    if (cells[assignment.dayIndex]) {
+                        cells[assignment.dayIndex].textContent = assignment.value;
+                        if (assignment.assigned) {
+                            cells[assignment.dayIndex].classList.add('assigned');
+                        }
+                    }
+                }
+            });
+        }
+
         // Calendar generation using table structure
-        function generateCalendar() {
+        function generateCalendar(preserveData = false) {
+            // Preserve current assignments if requested
+            let currentAssignments = [];
+            if (preserveData) {
+                currentAssignments = preserveAssignments();
+            }
+            
             const table = document.getElementById("calendarTable");
             table.innerHTML = '';
             
@@ -544,6 +601,11 @@
                 
                 table.appendChild(row);
             });
+            
+            // Restore assignments if we were preserving data
+            if (preserveData && currentAssignments.length > 0) {
+                restoreAssignments(currentAssignments);
+            }
         }
 
         // Place selector functions
@@ -607,7 +669,8 @@
                     phone: phone || '' 
                 });
                 closeAddWorkerModal();
-                generateCalendar();
+                // Use preserveData=true to keep current assignments
+                generateCalendar(true);
                 autoSaveSchedule();
             } else {
                 alert("נא למלא את שם העובד.");
@@ -651,7 +714,8 @@
                 workers.splice(index, 1);
                 autoSaveSchedule();
                 showManageWorkersModal();
-                generateCalendar();
+                // Use preserveData=true but it won't preserve assignments for removed workers
+                generateCalendar(false); // Actually, we should regenerate without preserving since worker was removed
             }
         }
 
@@ -679,7 +743,8 @@
                     phone: phone || '' 
                 };
                 autoSaveSchedule();
-                generateCalendar();
+                // Use preserveData=true to keep current assignments
+                generateCalendar(true);
                 closeEditWorkerModal();
             } else {
                 alert("נא למלא את שם העובד.");
@@ -794,21 +859,35 @@
 
         // Summary and save functions
         function updateAssignmentSummary() {
-            const counters = {};
-            let total = 0;
-            places.forEach(place => counters[place] = 0);
+            const workerDays = {};
+            let totalDays = 0;
 
-            document.querySelectorAll('.time-cell').forEach(cell => {
-                const place = cell.textContent.trim();
-                if (place && counters.hasOwnProperty(place)) {
-                    counters[place]++;
-                    total++;
+            // Initialize counters for all workers
+            workers.forEach(worker => {
+                const name = typeof worker === 'string' ? worker : worker.name;
+                workerDays[name] = 0;
+            });
+
+            // Count days for each worker
+            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            rows.forEach((row, workerIndex) => {
+                if (workers[workerIndex]) {
+                    const workerName = typeof workers[workerIndex] === 'string' ? workers[workerIndex] : workers[workerIndex].name;
+                    const cells = row.querySelectorAll('.time-cell');
+                    cells.forEach(cell => {
+                        if (cell.textContent.trim()) {
+                            workerDays[workerName]++;
+                            totalDays++;
+                        }
+                    });
                 }
             });
 
-            let summary = `סה"כ הקצאות: ${total}<br>`;
-            for (const [place, count] of Object.entries(counters)) {
-                summary += `${place}: ${count} עובדים<br>`;
+            let summary = `סה"כ ימי עבודה: ${totalDays}<br><br>`;
+            summary += '<strong>ימי עבודה לכל עובד:</strong><br>';
+            
+            for (const [workerName, days] of Object.entries(workerDays)) {
+                summary += `${workerName}: ${days} ימים<br>`;
             }
 
             document.getElementById('assignmentSummary').innerHTML = summary;
@@ -912,6 +991,36 @@
 
         // Enhanced print function
         function printSchedule() {
+            // Calculate days for each worker before printing
+            const workerDays = {};
+            workers.forEach((worker, workerIndex) => {
+                const name = typeof worker === 'string' ? worker : worker.name;
+                workerDays[name] = 0;
+                
+                const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+                if (rows[workerIndex]) {
+                    const cells = rows[workerIndex].querySelectorAll('.time-cell');
+                    cells.forEach(cell => {
+                        if (cell.textContent.trim()) {
+                            workerDays[name]++;
+                        }
+                    });
+                }
+            });
+
+            // Temporarily modify worker name cells to include day counts
+            const nameCells = document.querySelectorAll('.name-cell');
+            const originalTexts = [];
+            
+            nameCells.forEach((cell, index) => {
+                if (workers[index]) {
+                    const workerName = typeof workers[index] === 'string' ? workers[index] : workers[index].name;
+                    originalTexts.push(cell.textContent);
+                    const dayCount = workerDays[workerName] || 0;
+                    cell.innerHTML = `${workerName}<br><small>(${dayCount} ימים)</small>`;
+                }
+            });
+
             // Add print title
             const printTitle = document.createElement('div');
             printTitle.innerHTML = '<h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:black;">לוח משמרות - ' + new Date().toLocaleDateString('he-IL') + '</h2>';
@@ -919,7 +1028,7 @@
             printTitle.className = 'print-title';
             document.body.appendChild(printTitle);
 
-            // Add print styles for title
+            // Add print styles for title and day counts
             const printStyle = document.createElement('style');
             printStyle.innerHTML = `
                 @media print {
@@ -928,15 +1037,29 @@
                         page-break-after: avoid !important;
                         margin-bottom: 15px !important;
                     }
+                    .calendar-table .name-cell small {
+                        font-size: 6px !important;
+                        font-weight: normal !important;
+                        color: #666 !important;
+                    }
                 }
             `;
             document.head.appendChild(printStyle);
 
             window.print();
 
-            // Cleanup
-            document.body.removeChild(printTitle);
-            document.head.removeChild(printStyle);
+            // Restore original texts after printing
+            setTimeout(() => {
+                nameCells.forEach((cell, index) => {
+                    if (originalTexts[index]) {
+                        cell.textContent = originalTexts[index];
+                    }
+                });
+                
+                // Cleanup
+                document.body.removeChild(printTitle);
+                document.head.removeChild(printStyle);
+            }, 1000);
         }
 
         // Export to Excel function
@@ -1057,4 +1180,3 @@
     </script>
 </body>
 </html>
-
