@@ -796,10 +796,28 @@
 
         function removeWorker(index) {
             if (confirm("האם אתה בטוח שתרצה למחוק את העובד הזה?")) {
+                // Save current assignments before removing worker
+                const currentAssignments = preserveAssignments();
+                
+                // Remove the worker
                 workers.splice(index, 1);
+                
+                // Filter out assignments for the deleted worker and adjust indices
+                const updatedAssignments = currentAssignments
+                    .filter(a => a.workerIndex !== index)
+                    .map(a => ({
+                        ...a,
+                        workerIndex: a.workerIndex > index ? a.workerIndex - 1 : a.workerIndex
+                    }));
+                
+                // Regenerate calendar
+                generateCalendar(false);
+                
+                // Restore assignments with adjusted indices
+                restoreAssignments(updatedAssignments);
+                
                 autoSaveSchedule();
                 showManageWorkersModal();
-                generateCalendar(false); 
             }
         }
 
