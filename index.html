@@ -116,9 +116,14 @@
             background: #f8f9fa;
         }
         
-        .calendar-table .time-cell.assigned {
-            background: #e9ecef;
+        .calendar-table .time-cell.holiday {
+            background: #ffe6e6;
             font-weight: bold;
+            color: #dc3545;
+        }
+        
+        .calendar-table .time-cell.holiday:hover {
+            background: #ffd1d1;
         }
         
         .modal {
@@ -386,6 +391,12 @@
                 color: black !important;
             }
             
+            .calendar-table .time-cell.holiday {
+                background: #ffe6e6 !important;
+                font-weight: bold !important;
+                color: #dc3545 !important;
+            }
+            
             .calendar-table th:first-child,
             .calendar-table td:first-child {
                 width: 12% !important;
@@ -576,7 +587,8 @@
                             workerIndex: workerIndex,
                             dayIndex: dayIndex,
                             value: cell.textContent.trim(),
-                            assigned: cell.classList.contains('assigned')
+                            assigned: cell.classList.contains('assigned'),
+                            holiday: cell.classList.contains('holiday')
                         });
                     }
                 });
@@ -593,7 +605,9 @@
                     const cells = rows[assignment.workerIndex].querySelectorAll('.time-cell');
                     if (cells[assignment.dayIndex]) {
                         cells[assignment.dayIndex].textContent = assignment.value;
-                        if (assignment.assigned) {
+                        if (assignment.holiday) {
+                            cells[assignment.dayIndex].classList.add('holiday');
+                        } else if (assignment.assigned) {
                             cells[assignment.dayIndex].classList.add('assigned');
                         }
                     }
@@ -667,6 +681,23 @@
             const container = document.getElementById("placeChoiceContainer");
             container.innerHTML = '';
             
+            // Add holiday option first
+            const holidayBtn = document.createElement('button');
+            holidayBtn.className = 'place-btn';
+            holidayBtn.style.background = '#ffe6e6';
+            holidayBtn.style.color = '#dc3545';
+            holidayBtn.textContent = '🏖️ חופש';
+            holidayBtn.onclick = () => {
+                cell.textContent = 'חופש';
+                cell.classList.add('holiday');
+                cell.classList.remove('assigned');
+                closePlaceSelector();
+                autoSaveSchedule();
+                updateAssignmentSummary();
+            };
+            container.appendChild(holidayBtn);
+            
+            // Add regular places
             places.forEach((place) => {
                 const btn = document.createElement('button');
                 btn.className = 'place-btn';
@@ -674,6 +705,7 @@
                 btn.onclick = () => {
                     cell.textContent = place;
                     cell.classList.add('assigned');
+                    cell.classList.remove('holiday');
                     closePlaceSelector();
                     autoSaveSchedule();
                     updateAssignmentSummary();
@@ -691,6 +723,7 @@
         function clearAssignment(cell) {
             cell.textContent = '';
             cell.classList.remove('assigned');
+            cell.classList.remove('holiday');
             updateAssignmentSummary();
             autoSaveSchedule();
         }
@@ -906,6 +939,7 @@
         function updateAssignmentSummary() {
             const workerDays = {};
             let totalDays = 0;
+            let totalHolidays = 0;
 
             workers.forEach(worker => {
                 const name = typeof worker === 'string' ? worker : worker.name;
@@ -919,14 +953,20 @@
                     const cells = row.querySelectorAll('.time-cell');
                     cells.forEach(cell => {
                         if (cell.textContent.trim()) {
-                            workerDays[workerName]++;
-                            totalDays++;
+                            // Don't count holidays as work days
+                            if (!cell.classList.contains('holiday')) {
+                                workerDays[workerName]++;
+                                totalDays++;
+                            } else {
+                                totalHolidays++;
+                            }
                         }
                     });
                 }
             });
 
-            let summary = `סה"כ ימי עבודה: ${totalDays}<br><br>`;
+            let summary = `סה"כ ימי עבודה: ${totalDays}<br>`;
+            summary += `סה"כ ימי עטלה: ${totalHolidays}<br><br>`;
             summary += '<strong>ימי עבודה לכל עובד:</strong><br>';
             
             for (const [workerName, days] of Object.entries(workerDays)) {
@@ -976,7 +1016,11 @@
                     data.assignments.forEach(a => {
                         if (cells[a.index]) {
                             cells[a.index].textContent = a.value;
-                            cells[a.index].classList.add('assigned');
+                            if (a.value === 'חופש' || a.value === 'יום עטלה') {
+                                cells[a.index].classList.add('holiday');
+                            } else {
+                                cells[a.index].classList.add('assigned');
+                            }
                         }
                     });
                     
@@ -1204,7 +1248,11 @@
                         data.assignments.forEach(a => {
                             if (cells[a.index]) {
                                 cells[a.index].textContent = a.value;
-                                cells[a.index].classList.add('assigned');
+                                if (a.value === 'חופש' || a.value === 'יום עטלה') {
+                                    cells[a.index].classList.add('holiday');
+                                } else {
+                                    cells[a.index].classList.add('assigned');
+                                }
                             }
                         });
                     }
@@ -1221,4 +1269,3 @@
     </script>
 </body>
 </html>
-
