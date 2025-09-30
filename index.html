@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>מערכת הקצאת עובדים</title>
+    <title>מערכת הקצאת עובדים - שבועיים</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -14,7 +14,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -75,7 +75,7 @@
             padding: 12px 8px;
             text-align: center;
             vertical-align: middle;
-            min-width: 100px;
+            min-width: 80px;
         }
         
         .calendar-table th {
@@ -114,6 +114,11 @@
         
         .calendar-table .time-cell:hover {
             background: #f8f9fa;
+        }
+        
+        .calendar-table .time-cell.assigned {
+            background: #e9ecef;
+            font-weight: bold;
         }
         
         .calendar-table .time-cell.holiday {
@@ -338,7 +343,7 @@
                 padding: 3px 2px !important;
                 text-align: center !important;
                 vertical-align: middle !important;
-                font-size: 8px !important;
+                font-size: 7px !important;
                 line-height: 1.1 !important;
                 height: 18px !important;
                 max-height: 18px !important;
@@ -349,19 +354,19 @@
                 background: #f0f0f0 !important;
                 color: black !important;
                 font-weight: bold !important;
-                font-size: 9px !important;
+                font-size: 8px !important;
                 height: 20px !important;
                 max-height: 20px !important;
             }
             
             .calendar-table th small {
-                font-size: 6px !important;
+                font-size: 5px !important;
                 font-weight: normal !important;
                 color: #666 !important;
             }
             
             .calendar-table th.corner-cell {
-                font-size: 7px !important;
+                font-size: 6px !important;
                 background: #f0f0f0 !important;
                 font-weight: bold !important;
                 padding: 2px 1px !important;
@@ -371,7 +376,7 @@
                 background: #e0e0e0 !important;
                 color: black !important;
                 font-weight: bold !important;
-                font-size: 8px !important;
+                font-size: 7px !important;
                 text-overflow: ellipsis !important;
                 white-space: nowrap !important;
             }
@@ -379,7 +384,7 @@
             .calendar-table .time-cell {
                 background: white !important;
                 color: black !important;
-                font-size: 7px !important;
+                font-size: 6px !important;
                 min-height: 18px !important;
                 max-height: 18px !important;
                 font-weight: normal !important;
@@ -399,18 +404,13 @@
             
             .calendar-table th:first-child,
             .calendar-table td:first-child {
-                width: 12% !important;
-                min-width: 60px !important;
-                max-width: 80px !important;
-            }
-            
-            .calendar-table th:not(:first-child),
-            .calendar-table td:not(:first-child) {
-                width: 12.57% !important;
+                width: 10% !important;
+                min-width: 50px !important;
+                max-width: 70px !important;
             }
             
             .calendar-table .name-cell small {
-                font-size: 6px !important;
+                font-size: 5px !important;
                 font-weight: normal !important;
                 color: #666 !important;
             }
@@ -423,13 +423,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏢 מערכת ניהול משמרות</h1>
-            <p>ניהול משמרות עובדים ומקומות עבודה</p>
+            <h1>🏢 מערכת ניהול משמרות - שבועיים</h1>
+            <p>ניהול משמרות עובדים ומקומות עבודה לשני שבועות</p>
         </div>
         
         <div class="controls">
             <div class="date-selector">
-                <label for="weekDate" style="font-weight: bold;">תאריך תחילת השבוע:</label>
+                <label for="weekDate" style="font-weight: bold;">תאריך תחילת השבוע הראשון:</label>
                 <input type="date" id="weekDate" onchange="updateCalendarDates()">
                 <button onclick="setCurrentWeek()">השבוע הנוכחי</button>
             </div>
@@ -447,21 +447,21 @@
         </div>
 
         <div class="calendar-container">
-            <table class="calendar-table" id="calendarTable">
-            </table>
+            <table class="calendar-table" id="calendarTable"></table>
         </div>
         
         <div id="assignmentSummary"></div>
 
         <div class="instructions">
             <h3>📌 הוראות שימוש</h3>
-            <p>לחץ על כל תא לבחירת מקום העבודה. לחץ שוב כדי להסיר הקצאה. השתמש בכפתורים לניהול עובדים ומקומות.</p>
+            <p>לחץ על כל תא לבחירת מקום העבודה או חופש. לחץ שוב כדי להסיר הקצאה. הטבלה מציגה שני שבועות מלאים.</p>
         </div>
     </div>
 
+    <!-- Modals -->
     <div class="modal" id="placeSelectorModal">
         <div class="modal-content">
-            <h3>בחר מקום עבודה</h3>
+            <h3>בחר מקום עבודה או חופש</h3>
             <div class="place-choice" id="placeChoiceContainer"></div>
             <button class="btn-secondary" onclick="closePlaceSelector()">ביטול</button>
         </div>
@@ -500,7 +500,7 @@
             <input id="editWorkerId" placeholder="מספר זהות (אופציונלי)" type="text" style="width: 100%;"/>
             <label class="optional-label">שדה אופציונלי</label>
             <input id="editWorkerPhone" placeholder="מספר טלפון (אופציונלי)" type="text" style="width: 100%;"/>
-            <label class="optional-label">שדה אופציونלי</label>
+            <label class="optional-label">שדה אופציונלי</label>
             <div style="margin-top: 1rem; text-align: center;">
                 <button onclick="saveEditedWorker()">שמור</button>
                 <button class="btn-secondary" onclick="closeEditWorkerModal()">ביטול</button>
@@ -537,6 +537,7 @@
         const workers = [];
         const places = [];
         let currentWeekStart = null;
+        let selectedCell = null;
 
         function setCurrentWeek() {
             const today = new Date();
@@ -561,7 +562,7 @@
             if (!currentWeekStart) return [];
             
             const dates = [];
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 14; i++) {
                 const date = new Date(currentWeekStart);
                 date.setDate(currentWeekStart.getDate() + i);
                 dates.push(date);
@@ -577,18 +578,18 @@
 
         function preserveAssignments() {
             const assignments = [];
-            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            const rows = document.querySelectorAll('#calendarTable tr:not(:first-child):not(:nth-child(2))');
             
             rows.forEach((row, workerIndex) => {
                 const cells = row.querySelectorAll('.time-cell');
                 cells.forEach((cell, dayIndex) => {
-                    if (cell.textContent.trim()) {
+                    const text = cell.textContent.trim();
+                    if (text) {
                         assignments.push({
                             workerIndex: workerIndex,
                             dayIndex: dayIndex,
-                            value: cell.textContent.trim(),
-                            assigned: cell.classList.contains('assigned'),
-                            holiday: cell.classList.contains('holiday')
+                            value: text,
+                            isHoliday: cell.classList.contains('holiday')
                         });
                     }
                 });
@@ -598,16 +599,16 @@
         }
 
         function restoreAssignments(assignments) {
-            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            const rows = document.querySelectorAll('#calendarTable tr:not(:first-child):not(:nth-child(2))');
             
             assignments.forEach(assignment => {
                 if (rows[assignment.workerIndex]) {
                     const cells = rows[assignment.workerIndex].querySelectorAll('.time-cell');
                     if (cells[assignment.dayIndex]) {
                         cells[assignment.dayIndex].textContent = assignment.value;
-                        if (assignment.holiday) {
+                        if (assignment.isHoliday) {
                             cells[assignment.dayIndex].classList.add('holiday');
-                        } else if (assignment.assigned) {
+                        } else {
                             cells[assignment.dayIndex].classList.add('assigned');
                         }
                     }
@@ -624,50 +625,77 @@
             const table = document.getElementById("calendarTable");
             table.innerHTML = '';
             
-            const headerRow = document.createElement('tr');
-            
-            const cornerTh = document.createElement('th');
-            cornerTh.textContent = 'עובדים / ימים';
-            cornerTh.className = 'corner-cell';
-            headerRow.appendChild(cornerTh);
-            
             const weekDates = getWeekDates();
-            days.forEach((day, index) => {
+            
+            // First row: Week titles
+            const titleRow = document.createElement('tr');
+            const cornerCell1 = document.createElement('th');
+            cornerCell1.className = 'corner-cell';
+            cornerCell1.textContent = 'עובדים';
+            titleRow.appendChild(cornerCell1);
+            
+            const week1Title = document.createElement('th');
+            week1Title.colSpan = 7;
+            week1Title.textContent = 'שבוע ראשון';
+            week1Title.style.background = '#4a5568';
+            titleRow.appendChild(week1Title);
+            
+            const week2Title = document.createElement('th');
+            week2Title.colSpan = 7;
+            week2Title.textContent = 'שבוע שני';
+            week2Title.style.background = '#2d3748';
+            titleRow.appendChild(week2Title);
+            
+            table.appendChild(titleRow);
+            
+            // Second row: Day names with dates
+            const daysRow = document.createElement('tr');
+            const cornerCell2 = document.createElement('th');
+            cornerCell2.className = 'corner-cell';
+            cornerCell2.textContent = 'ימים';
+            daysRow.appendChild(cornerCell2);
+            
+            for (let i = 0; i < 14; i++) {
                 const dayTh = document.createElement('th');
-                let headerText = day;
+                const dayName = days[i % 7];
+                let headerText = dayName;
                 
-                if (weekDates.length > 0 && weekDates[index]) {
-                    headerText += `<br><small>${formatShortDate(weekDates[index])}</small>`;
+                if (weekDates[i]) {
+                    headerText += `<br><small>${formatShortDate(weekDates[i])}</small>`;
                 }
                 
                 dayTh.innerHTML = headerText;
-                headerRow.appendChild(dayTh);
-            });
+                daysRow.appendChild(dayTh);
+            }
             
-            table.appendChild(headerRow);
+            table.appendChild(daysRow);
 
-            workers.forEach(worker => {
+            // Add worker rows
+            workers.forEach((worker, workerIndex) => {
                 const row = document.createElement('tr');
                 
                 const nameCell = document.createElement('td');
                 nameCell.className = 'name-cell';
                 const name = typeof worker === 'string' ? worker : worker.name;
                 nameCell.textContent = name;
-                nameCell.onclick = () => showWorkerDetails(worker);
+                nameCell.onclick = function() {
+                    showWorkerDetails(worker);
+                };
                 row.appendChild(nameCell);
                 
-                days.forEach(() => {
+                // Add 14 cells for two weeks
+                for (let dayIndex = 0; dayIndex < 14; dayIndex++) {
                     const cell = document.createElement('td');
                     cell.className = 'time-cell';
-                    cell.onclick = () => {
-                        if (cell.textContent.trim()) {
-                            clearAssignment(cell);
-                        } else {
-                            openPlaceSelector(cell);
-                        }
+                    cell.setAttribute('data-worker', workerIndex);
+                    cell.setAttribute('data-day', dayIndex);
+                    
+                    cell.onclick = function() {
+                        handleCellClick(this);
                     };
+                    
                     row.appendChild(cell);
-                });
+                }
                 
                 table.appendChild(row);
             });
@@ -675,22 +703,35 @@
             if (preserveData && currentAssignments.length > 0) {
                 restoreAssignments(currentAssignments);
             }
+            
+            updateAssignmentSummary();
         }
 
-        function openPlaceSelector(cell) {
+        function handleCellClick(cell) {
+            if (cell.textContent.trim()) {
+                clearAssignment(cell);
+            } else {
+                selectedCell = cell;
+                openPlaceSelector();
+            }
+        }
+
+        function openPlaceSelector() {
+            if (!selectedCell) return;
+            
             const container = document.getElementById("placeChoiceContainer");
             container.innerHTML = '';
             
-            // Add holiday option first
+            // Add holiday option
             const holidayBtn = document.createElement('button');
             holidayBtn.className = 'place-btn';
             holidayBtn.style.background = '#ffe6e6';
             holidayBtn.style.color = '#dc3545';
             holidayBtn.textContent = '🏖️ חופש';
-            holidayBtn.onclick = () => {
-                cell.textContent = 'חופש';
-                cell.classList.add('holiday');
-                cell.classList.remove('assigned');
+            holidayBtn.onclick = function() {
+                selectedCell.textContent = 'חופש';
+                selectedCell.classList.add('holiday');
+                selectedCell.classList.remove('assigned');
                 closePlaceSelector();
                 autoSaveSchedule();
                 updateAssignmentSummary();
@@ -702,10 +743,10 @@
                 const btn = document.createElement('button');
                 btn.className = 'place-btn';
                 btn.textContent = place;
-                btn.onclick = () => {
-                    cell.textContent = place;
-                    cell.classList.add('assigned');
-                    cell.classList.remove('holiday');
+                btn.onclick = function() {
+                    selectedCell.textContent = place;
+                    selectedCell.classList.add('assigned');
+                    selectedCell.classList.remove('holiday');
                     closePlaceSelector();
                     autoSaveSchedule();
                     updateAssignmentSummary();
@@ -718,6 +759,7 @@
 
         function closePlaceSelector() {
             document.getElementById("placeSelectorModal").style.display = 'none';
+            selectedCell = null;
         }
 
         function clearAssignment(cell) {
@@ -796,13 +838,10 @@
 
         function removeWorker(index) {
             if (confirm("האם אתה בטוח שתרצה למחוק את העובד הזה?")) {
-                // Save current assignments before removing worker
                 const currentAssignments = preserveAssignments();
                 
-                // Remove the worker
                 workers.splice(index, 1);
                 
-                // Filter out assignments for the deleted worker and adjust indices
                 const updatedAssignments = currentAssignments
                     .filter(a => a.workerIndex !== index)
                     .map(a => ({
@@ -810,10 +849,7 @@
                         workerIndex: a.workerIndex > index ? a.workerIndex - 1 : a.workerIndex
                     }));
                 
-                // Regenerate calendar
                 generateCalendar(false);
-                
-                // Restore assignments with adjusted indices
                 restoreAssignments(updatedAssignments);
                 
                 autoSaveSchedule();
@@ -904,6 +940,7 @@
                 const row = document.createElement('div');
                 row.className = 'place-row';
                 row.innerHTML = `
+                    <span>${place}</span>
                     <div>
                         <button onclick="renamePlace(${index})" style="margin: 2px; padding: 4px 8px;">✏️</button>
                         <button class="btn-secondary" onclick="removePlace(${index})" style="margin: 2px; padding: 4px 8px;">🗑️</button>
@@ -964,14 +1001,13 @@
                 workerDays[name] = 0;
             });
 
-            const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+            const rows = document.querySelectorAll('#calendarTable tr:not(:first-child):not(:nth-child(2))');
             rows.forEach((row, workerIndex) => {
                 if (workers[workerIndex]) {
                     const workerName = typeof workers[workerIndex] === 'string' ? workers[workerIndex] : workers[workerIndex].name;
                     const cells = row.querySelectorAll('.time-cell');
                     cells.forEach(cell => {
                         if (cell.textContent.trim()) {
-                            // Don't count holidays as work days
                             if (!cell.classList.contains('holiday')) {
                                 workerDays[workerName]++;
                                 totalDays++;
@@ -984,7 +1020,7 @@
             });
 
             let summary = `סה"כ ימי עבודה: ${totalDays}<br>`;
-            summary += `סה"כ ימי עטלה: ${totalHolidays}<br><br>`;
+            summary += `סה"כ ימי חופש: ${totalHolidays}<br><br>`;
             summary += '<strong>ימי עבודה לכל עובד:</strong><br>';
             
             for (const [workerName, days] of Object.entries(workerDays)) {
@@ -1007,7 +1043,8 @@
                 if (cell.textContent.trim()) {
                     data.assignments.push({ 
                         index, 
-                        value: cell.textContent.trim()
+                        value: cell.textContent.trim(),
+                        isHoliday: cell.classList.contains('holiday')
                     });
                 }
             });
@@ -1028,13 +1065,14 @@
                     places.length = 0;
                     workers.push(...data.workers);
                     places.push(...data.places);
+                    
                     generateCalendar();
                     
                     const cells = document.querySelectorAll('.time-cell');
                     data.assignments.forEach(a => {
                         if (cells[a.index]) {
                             cells[a.index].textContent = a.value;
-                            if (a.value === 'חופש' || a.value === 'יום עטלה') {
+                            if (a.isHoliday || a.value === 'חופש' || a.value === 'יום עטלה') {
                                 cells[a.index].classList.add('holiday');
                             } else {
                                 cells[a.index].classList.add('assigned');
@@ -1053,7 +1091,7 @@
         }
 
         function saveSchedule() {
-            const fileName = prompt("הזן שם קובץ לשמירה:", "לוח_משמרות.json");
+            const fileName = prompt("הזן שם קובץ לשמירה:", "לוח_משמרות_שבועיים.json");
             if (!fileName) return;
 
             const data = {
@@ -1068,7 +1106,8 @@
                 if (cell.textContent.trim()) {
                     data.assignments.push({ 
                         index, 
-                        value: cell.textContent.trim()
+                        value: cell.textContent.trim(),
+                        isHoliday: cell.classList.contains('holiday')
                     });
                 }
             });
@@ -1098,15 +1137,16 @@
 
         function printSchedule() {
             const workerDays = {};
-            workers.forEach((worker, workerIndex) => {
-                const name = typeof worker === 'string' ? worker : worker.name;
-                workerDays[name] = 0;
-                
-                const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
-                if (rows[workerIndex]) {
-                    const cells = rows[workerIndex].querySelectorAll('.time-cell');
+            const rows = document.querySelectorAll('#calendarTable tr:not(:first-child):not(:nth-child(2))');
+            
+            rows.forEach((row, workerIndex) => {
+                if (workers[workerIndex]) {
+                    const name = typeof workers[workerIndex] === 'string' ? workers[workerIndex] : workers[workerIndex].name;
+                    workerDays[name] = 0;
+                    
+                    const cells = row.querySelectorAll('.time-cell');
                     cells.forEach(cell => {
-                        if (cell.textContent.trim()) {
+                        if (cell.textContent.trim() && !cell.classList.contains('holiday')) {
                             workerDays[name]++;
                         }
                     });
@@ -1126,7 +1166,7 @@
             });
 
             const printTitle = document.createElement('div');
-            printTitle.innerHTML = '<h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:black;">לוח משמרות - ' + new Date().toLocaleDateString('he-IL') + '</h2>';
+            printTitle.innerHTML = '<h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:black;">לוח משמרות - שבועיים - ' + new Date().toLocaleDateString('he-IL') + '</h2>';
             printTitle.style.display = 'none';
             printTitle.className = 'print-title';
             document.body.appendChild(printTitle);
@@ -1163,7 +1203,10 @@
                 
                 const scheduleData = [];
                 const headerRow = ['עובד'];
-                days.forEach(day => headerRow.push(day));
+                
+                days.forEach(day => headerRow.push(`שבוע 1 - ${day}`));
+                days.forEach(day => headerRow.push(`שבוע 2 - ${day}`));
+                
                 scheduleData.push(headerRow);
                 
                 const cells = document.querySelectorAll('.time-cell');
@@ -1172,18 +1215,20 @@
                 workers.forEach(worker => {
                     const row = [typeof worker === 'string' ? worker : worker.name];
                     
-                    days.forEach(() => {
+                    for (let i = 0; i < 14; i++) {
                         const cellValue = cells[cellIndex] ? cells[cellIndex].textContent.trim() : '';
                         row.push(cellValue);
                         cellIndex++;
-                    });
+                    }
                     
                     scheduleData.push(row);
                 });
                 
                 const ws1 = XLSX.utils.aoa_to_sheet(scheduleData);
                 const colWidths = [{ wch: 20 }];
-                days.forEach(() => colWidths.push({ wch: 15 }));
+                for (let i = 0; i < 14; i++) {
+                    colWidths.push({ wch: 12 });
+                }
                 ws1['!cols'] = colWidths;
                 XLSX.utils.book_append_sheet(wb, ws1, 'לוח משמרות');
                 
@@ -1194,13 +1239,13 @@
                     workerDays[name] = 0;
                 });
                 
-                const rows = document.querySelectorAll('#calendarTable tbody tr, #calendarTable tr:not(:first-child)');
+                const rows = document.querySelectorAll('#calendarTable tr:not(:first-child):not(:nth-child(2))');
                 rows.forEach((row, workerIndex) => {
                     if (workers[workerIndex]) {
                         const workerName = typeof workers[workerIndex] === 'string' ? workers[workerIndex] : workers[workerIndex].name;
                         const cells = row.querySelectorAll('.time-cell');
                         cells.forEach(cell => {
-                            if (cell.textContent.trim()) {
+                            if (cell.textContent.trim() && !cell.classList.contains('holiday')) {
                                 workerDays[workerName]++;
                             }
                         });
@@ -1233,7 +1278,7 @@
                 
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('he-IL').replace(/\//g, '-');
-                const filename = `לוח_משמרות_${dateStr}.xlsx`;
+                const filename = `לוח_משמרות_שבועיים_${dateStr}.xlsx`;
                 
                 XLSX.writeFile(wb, filename);
                 alert('✅ הקובץ יוצא בהצלחה!');
@@ -1266,7 +1311,7 @@
                         data.assignments.forEach(a => {
                             if (cells[a.index]) {
                                 cells[a.index].textContent = a.value;
-                                if (a.value === 'חופש' || a.value === 'יום עטלה') {
+                                if (a.isHoliday || a.value === 'חופש' || a.value === 'יום עטלה') {
                                     cells[a.index].classList.add('holiday');
                                 } else {
                                     cells[a.index].classList.add('assigned');
@@ -1287,3 +1332,4 @@
     </script>
 </body>
 </html>
+
